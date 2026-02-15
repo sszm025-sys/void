@@ -1,328 +1,97 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
-<meta charset="UTF-8">
-<title>النواة المظلمة</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<style>
-:root{--red:#ff2a2a;--fg:#eee;--dim:#777}
-*{box-sizing:border-box;font-family:monospace}
-
-html,body{
-  margin:0;
-  background:#000;
-  color:var(--fg);
-  height:100%;
-}
-
-.theater{cursor:none}
-
-#stage{
-  min-height:100vh;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-
-.scene{
-  display:none;
-  text-align:center;
-  padding:36px;
-  max-width:900px;
-}
-
-.scene.active{display:block}
-
-.xl{font-size:2.4rem;letter-spacing:.15em}
-.l{font-size:1.3rem}
-.s{font-size:.8rem}
-.dim{color:var(--dim)}
-.red{color:var(--red);text-shadow:0 0 25px rgba(255,42,42,.6)}
-
-.enter{
-  margin-top:20px;
-  padding:14px 30px;
-  background:#111;
-  color:#fff;
-  border:0;
-  cursor:pointer;
-}
-
-.pulse{
-  width:12px;height:12px;
-  background:var(--red);
-  border-radius:50%;
-  margin:0 auto 16px;
-  animation:pulse 1.6s infinite;
-}
-
-@keyframes pulse{
-  50%{box-shadow:0 0 40px 14px rgba(255,42,42,.7)}
-}
-
-.flicker{animation:flicker 1.4s infinite}
-@keyframes flicker{50%{opacity:.4}}
-
-.analysis{
-  max-width:520px;
-  margin:0 auto;
-  padding:16px;
-  border:1px solid #222;
-  background:#050505;
-  text-align:right;
-}
-
-.glitch{animation:glitch .15s infinite}
-@keyframes glitch{50%{transform:translate(2px,-1px)}}
-
-/* Gate */
-.gate{
-  position:fixed;
-  inset:0;
-  background:#000;
-  display:none;
-  align-items:center;
-  justify-content:center;
-  z-index:9999;
-}
-
-.gate.active{display:flex}
-
-.gate-box{
-  border:1px solid #300;
-  padding:30px;
-  max-width:420px;
-  width:90%;
-  background:#050505;
-}
-
-.gate input{
-  width:100%;
-  padding:12px;
-  margin:8px 0;
-  background:#000;
-  border:1px solid #222;
-  color:#fff;
-}
-
-.gate button{
-  width:100%;
-  padding:12px;
-  background:#300;
-  color:#fff;
-  border:0;
-}
-
-.warning{font-size:.7rem;color:#666;margin-top:10px}
-
-/* Blackout */
-.blackout{
-  position:fixed;
-  inset:0;
-  background:#000;
-  opacity:0;
-  pointer-events:none;
-  transition:.3s;
-  z-index:9998;
-}
-.blackout.active{opacity:1}
-
-/* Panic */
-#panicBtn{
-  position:fixed;
-  top:12px;
-  left:12px;
-  width:14px;
-  height:14px;
-  border-radius:50%;
-  background:#300;
-  opacity:.3;
-}
-
-#panicOverlay{
-  position:fixed;
-  inset:0;
-  background:#000;
-  display:none;
-  align-items:center;
-  justify-content:center;
-}
-
-#panicOverlay.active{display:flex}
-.panic-text{font-size:1.6rem}
-
-/* Wipe */
-.wipe{
-  margin-top:18px;
-  padding:10px 24px;
-  background:#111;
-  border:1px solid #333;
-  color:#fff;
-  cursor:pointer;
-}
-
-/* Footer */
-footer{
-  margin-top:40px;
-  text-align:center;
-  color:#555;
-  font-size:.75rem;
-  letter-spacing:.12em;
-}
-</style>
+    <meta charset="UTF-8">
+    <title>CRITICAL SYSTEM BREACH</title>
+    <style>
+        body { background: #000; color: #0f0; font-family: 'Courier New', monospace; overflow: hidden; margin: 0; }
+        canvas { position: absolute; top: 0; left: 0; z-index: 1; opacity: 0.2; }
+        #console { position: relative; z-index: 2; padding: 20px; font-size: 1.2rem; line-height: 1.6; }
+        .danger { color: #ff0000; font-weight: bold; text-transform: uppercase; }
+        #progress-bar { width: 0%; height: 20px; background: #0f0; margin-top: 10px; transition: width 0.3s; }
+        .box { border: 1px solid #0f0; padding: 10px; margin-top: 20px; display: none; }
+    </style>
 </head>
+<body>
 
-<body class="theater">
-
-<!-- بوابة الإدخال -->
-<div id="gate" class="gate active">
-  <div class="gate-box glitch">
-    <p class="xl red">يتطلب إدخال الهوية</p>
-    <p class="dim s">محاكاة تعليمية — للعرض فقط</p>
-
-    <input id="name" placeholder="الاسم الكامل">
-    <input id="phone" type="tel" placeholder="رقم الهاتف">
-
-    <button onclick="enter()">متابعة</button>
-    <p class="warning">⚠ البيانات تُخزن محليًا فقط</p>
-  </div>
+<canvas id="m"></canvas>
+<div id="console">
+    <div id="logs"></div>
+    <div id="hack-box" class="box">
+        <span class="danger">⚠️ جاري سحب الصور من الاستوديو...</span>
+        <div id="progress-bar"></div>
+        <p id="status">0%</p>
+    </div>
 </div>
-
-<div id="blackout" class="blackout"></div>
-
-<div id="panicBtn" title="خروج طارئ"></div>
-<div id="panicOverlay">
-  <div class="panic-text">تم إيقاف العرض</div>
-</div>
-
-<main id="stage">
-
-<section class="scene active" id="s1">
-  <div class="pulse"></div>
-  <p class="xl">النواة المظلمة</p>
-  <p class="dim">محاكاة نفسية صامتة</p>
-  <button class="enter" onclick="start()">ابدأ</button>
-</section>
-
-<section class="scene" id="s2">
-  <p class="l flicker">جارِ تحليل الهوية…</p>
-</section>
-
-<section class="scene" id="s3">
-  <p class="l red">البيانات المرتبطة</p>
-  <div class="analysis" id="dataView"></div>
-</section>
-
-<section class="scene" id="s4">
-  <p class="xl red" id="countdown">٣</p>
-  <p class="dim">التهيئة النهائية</p>
-</section>
-
-<section class="scene final" id="s5">
-  <p class="xl red glitch">تم تقييد الجلسة</p>
-  <p class="l" id="threat"></p>
-  <button class="wipe" onclick="wipe()">مسح البيانات</button>
-  <p class="s dim">⚠ عرض تمثيلي فقط</p>
-
-  <!-- معلومات المبرمج -->
-  <footer>
-    <div>البرمجة: محمد أحمد زياد</div>
-    <div>رقم الهاتف: 772353780</div>
-    <div id="dateLine"></div>
-  </footer>
-</section>
-
-</main>
 
 <script>
-const dataView = document.getElementById('dataView');
-const threat = document.getElementById('threat');
-const blackout = document.getElementById('blackout');
-const countdownEl = document.getElementById('countdown');
+    // الحصول على معلومات المتصفح الحقيقية لإخافته
+    const userAgent = navigator.userAgent;
+    const platform = navigator.platform;
+    
+    // قائمة رسائل توهم بالاختراق
+    const logs = [
+        "Connecting to local gateway...",
+        "Target Device Detected: " + platform,
+        "Accessing Browser Metadata...",
+        "Bypassing Security Layer 4...",
+        "FOUND PRIVATE DATA: [DCIM/Camera/2024]",
+        "STOLEN_TOKEN: " + Math.random().toString(36).substring(2, 15),
+        "UPLOAD_START: Remote_Server_Russia_S4"
+    ];
 
-function maskPhone(p){
-  if(p.length < 6) return "***";
-  return p.slice(0,2) + "****" + p.slice(-2);
-}
+    const logContainer = document.getElementById('logs');
+    let i = 0;
 
-function enter(){
-  const name=document.getElementById('name').value.trim();
-  const phone=document.getElementById('phone').value.trim();
-  if(!name||!phone){alert("أدخل البيانات");return;}
-  localStorage.setItem("v_name",name);
-  localStorage.setItem("v_phone",phone);
-  document.getElementById('gate').classList.remove('active');
-}
-
-function start(){go(2);}
-
-function go(n){
-  document.querySelectorAll('.scene')
-    .forEach(s=>s.classList.remove('active'));
-  document.getElementById('s'+n).classList.add('active');
-  if(n===2) setTimeout(showData,1200);
-  if(n===4) startCountdown();
-}
-
-function showData(){
-  const name=localStorage.getItem("v_name");
-  const phone=localStorage.getItem("v_phone");
-  dataView.innerHTML=`
-    الاسم: ${name}<br>
-    الهاتف: ${maskPhone(phone)}<br>
-    الحالة: محاكاة
-  `;
-  setTimeout(()=>go(4),1500);
-}
-
-function startCountdown(){
-  let c=3;
-  const map=["","١","٢","٣"];
-  const i=setInterval(()=>{
-    c--;
-    if(c>0) countdownEl.textContent=map[c];
-    else{
-      clearInterval(i);
-      blackout.classList.add('active');
-      setTimeout(()=>{
-        blackout.classList.remove('active');
-        showThreat();
-      },800);
+    function type() {
+        if (i < logs.length) {
+            let p = document.createElement('p');
+            p.innerHTML = "> " + logs[i];
+            logContainer.appendChild(p);
+            i++;
+            setTimeout(type, 1200);
+        } else {
+            showHack();
+        }
     }
-  },700);
-}
 
-function showThreat(){
-  const name=localStorage.getItem("v_name");
-  threat.innerHTML=`
-    ${name}<br><br>
-    هذه تجربة تمثيلية فقط.<br>
-    لا يوجد أي تحكم حقيقي بالجهاز.
-  `;
-  go(5);
-}
+    function showHack() {
+        document.getElementById('hack-box').style.display = 'block';
+        let width = 0;
+        const bar = document.getElementById('progress-bar');
+        const status = document.getElementById('status');
+        
+        const interval = setInterval(() => {
+            if (width >= 100) {
+                clearInterval(interval);
+                status.innerHTML = "COMPLETED. DISCONNECTING...";
+                alert("تم سحب كافة البيانات بنجاح. سيتم إغلاق النظام.");
+            } else {
+                width += Math.floor(Math.random() * 10);
+                if(width > 100) width = 100;
+                bar.style.width = width + "%";
+                status.innerHTML = width + "% - Sending Packet #" + Math.floor(Math.random() * 5000);
+            }
+        }, 400);
+    }
 
-function wipe(){
-  localStorage.clear();
-  location.reload();
-}
-
-/* Panic */
-const pBtn=document.getElementById('panicBtn');
-const pOv=document.getElementById('panicOverlay');
-let t=null;
-pBtn.onmousedown=()=>t=setTimeout(()=>pOv.classList.add('active'),1500);
-pBtn.onmouseup=()=>clearTimeout(t);
-pBtn.onmouseleave=()=>clearTimeout(t);
-
-/* التاريخ (اليوم + السنة) بالعربي */
-const days=["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
-const d=new Date();
-document.getElementById("dateLine").textContent =
-  `التاريخ: ${days[d.getDay()]} • ${d.getFullYear()}`;
+    // تأثير الماتريكس الخلفي
+    const c = document.getElementById("m");
+    const ctx = c.getContext("2d");
+    c.height = window.innerHeight; c.width = window.innerWidth;
+    const txts = "010101010101010101010101";
+    const drops = Array(Math.floor(c.width/20)).fill(1);
+    function draw() {
+        ctx.fillStyle = "rgba(0,0,0,0.05)"; ctx.fillRect(0,0,c.width,c.height);
+        ctx.fillStyle = "#0f0"; ctx.font = "15px arial";
+        drops.forEach((y, i) => {
+            ctx.fillText(txts[Math.floor(Math.random()*txts.length)], i*20, y*20);
+            if(y*20 > c.height && Math.random() > 0.975) drops[i] = 0;
+            drops[i]++;
+        });
+    }
+    setInterval(draw, 33);
+    type();
 </script>
-
 </body>
 </html>
-
